@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<link rel="manifest" href="manifest.webmanifest">
+<title>أعلام ترفرف • Waving Flags</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141c33; --panel2:#1b2542; --line:#2c3a63;
+    --txt:#f2f5ff; --mut:#a9b4d4; --acc:#ffcf4d; --acc2:#4dd2ff; --ok:#37d67a; --bad:#ff5d6c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1c2a55 0%,var(--bg) 60%);color:var(--txt);
+    font-family:"Segoe UI",Tahoma,Arial,sans-serif;min-height:100vh}
+  .wrap{max-width:1060px;margin:0 auto;padding:18px 14px 40px}
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .logo{font-size:42px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+  h1{font-size:clamp(22px,4vw,34px);margin:0;background:linear-gradient(90deg,var(--acc),#ff9d4d 40%,var(--acc2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);margin:2px 0 12px;font-size:clamp(13px,2.4vw,16px)}
+  .netStatus{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 11px;color:var(--mut);font-size:13px;margin:0 0 10px}
+  .netStatus::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+  .netStatus.offline::before{background:var(--bad)}
+  #langBtn{margin-inline-start:auto;background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+    border-radius:999px;padding:8px 18px;font-size:15px;cursor:pointer}
+  #langBtn:hover{border-color:var(--acc)}
+  .tabs{display:flex;gap:10px;margin:10px 0 14px}
+  .tabs button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);
+    color:var(--txt);font-size:17px;cursor:pointer}
+  .tabs button.on{background:linear-gradient(180deg,#2b3a6b,#1b2542);border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+  .panel{background:rgba(20,28,51,.75);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .searchRow{display:flex;gap:10px;flex-wrap:wrap}
+  #countryInput{flex:1;min-width:200px;padding:13px 14px;font-size:17px;border-radius:12px;border:1px solid var(--line);
+    background:#0e1530;color:var(--txt)}
+  .btn{background:linear-gradient(180deg,#3a5bd9,#2a44ad);color:#fff;border:none;border-radius:12px;
+    padding:13px 22px;font-size:17px;cursor:pointer}
+  .btn:hover{filter:brightness(1.12)}
+  .btn.ghost{background:var(--panel2);border:1px solid var(--line)}
+  #searchErr{color:var(--bad);min-height:22px;margin-top:8px;font-size:15px}
+
+  /* المسرح: اتجاه ثابت LTR كي تبقى السارية يسارًا والعلم يرفرف يمينًا */
+  .stage{position:relative;direction:ltr;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+    aspect-ratio:16/10;min-height:340px;background:linear-gradient(180deg,#27407c 0%,#3f6db3 45%,#9fc3e8 75%,#e8d9b0 100%)}
+  #lmImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+  #lmImg.show{opacity:1}
+  .noimg{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-end;padding:20px;
+    font-size:90px;opacity:.35}
+  .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,10,30,.25) 0%,transparent 35%,transparent 55%,rgba(5,10,30,.55) 100%)}
+  #flagCanvas{position:absolute;inset:0;width:100%;height:100%}
+  .pole{position:absolute;top:5%;bottom:0;left:34px;width:12px;border-radius:8px;
+    background:linear-gradient(90deg,#6b7488,#e8edf7 40%,#8a93a8 70%,#4c5468);box-shadow:3px 4px 10px rgba(0,0,0,.45)}
+  .ball{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#ffe9a8,var(--acc) 45%,#8a6a00 100%);box-shadow:0 0 12px rgba(255,207,77,.8)}
+  .spin{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;
+    border:4px solid rgba(255,255,255,.25);border-top-color:#fff;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .caption{position:absolute;bottom:12px;left:12px;background:rgba(5,10,25,.72);backdrop-filter:blur(4px);
+    border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:8px 14px;font-size:15px;max-width:75%}
+  .caption a{color:var(--acc2);font-size:13px;margin-inline-start:8px}
+  .anthemChip{position:absolute;top:12px;left:70px;display:flex;align-items:center;gap:10px;
+    background:rgba(5,10,25,.72);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 14px 6px 6px;max-width:calc(100% - 150px)}
+  #anthemBtn{flex:none;width:42px;height:42px;border-radius:50%;border:none;font-size:18px;cursor:pointer;
+    background:linear-gradient(180deg,var(--acc),#e09b00);color:#231a00}
+  #anthemName{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .eq{flex:none;display:flex;align-items:flex-end;gap:3px;height:22px;width:30px}
+  .eq i{flex:1;background:var(--acc2);border-radius:2px;height:4px}
+  .eq.play i{animation:eq .7s ease-in-out infinite alternate}
+  .eq.play i:nth-child(2){animation-delay:.15s}.eq.play i:nth-child(3){animation-delay:.3s}
+  .eq.play i:nth-child(4){animation-delay:.45s}.eq.play i:nth-child(5){animation-delay:.6s}
+  @keyframes eq{from{height:4px}to{height:22px}}
+  .anthemBar{display:flex;gap:10px;align-items:center;margin-top:10px}
+  #anthemAudio{flex:1;min-width:0}
+  .info{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}
+  .card{background:rgba(20,28,51,.8);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .card .k{font-size:13px;color:var(--mut);margin-bottom:4px}
+  .card .v{font-size:19px;font-weight:700}
+  .card.fact .v{font-size:15px;font-weight:400;line-height:1.7}
+  .windRow{display:flex;align-items:center;gap:12px;margin-top:12px;color:var(--mut);font-size:15px;flex-wrap:wrap}
+  .windRow input[type=range]{flex:1;min-width:130px}
+  input[type=range]{accent-color:var(--acc)}
+  .scoreRow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:7px 16px;font-size:15px}
+  .pill b{color:var(--acc)}
+  #quizQ{font-size:19px;font-weight:700;margin:6px 0 12px}
+  #quizOpts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){#quizOpts{grid-template-columns:1fr}}
+  @media(max-width:560px){.stage{aspect-ratio:4/5;min-height:0}}
+  #quizOpts button{padding:14px;border-radius:12px;border:1px solid var(--line);background:#0e1530;color:var(--txt);
+    font-size:17px;cursor:pointer;line-height:1.5}
+  #quizOpts button small{display:block;font-size:13px;color:var(--mut)}
+  #quizOpts button:not(:disabled):hover{border-color:var(--acc2)}
+  #quizOpts button.right{background:rgba(55,214,122,.18);border-color:var(--ok)}
+  #quizOpts button.wrong{background:rgba(255,93,108,.18);border-color:var(--bad)}
+  #quizFb{min-height:30px;margin:10px 0;font-size:16px;line-height:1.7}
+  footer{margin-top:22px;color:var(--mut);font-size:13px;line-height:2;text-align:center}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">🎌</div>
+    <div><h1 data-i18n="title">أعلام ترفرف</h1></div>
+    <button id="langBtn">English 🌐</button>
+  </header>
+  <p class="sub" data-i18n="subtitle"></p>
+  <div class="netStatus" id="netStatus" role="status" aria-live="polite"></div>
+
+  <nav class="tabs">
+    <button id="tabExplore" class="on">🔍 <span data-i18n="explore"></span></button>
+    <button id="tabQuiz">🎮 <span data-i18n="quiz"></span></button>
+  </nav>
+
+  <section class="panel" id="explorePanel">
+    <div class="searchRow">
+      <input id="countryInput" list="countryList" data-i18n-ph="searchPh" autocomplete="off">
+      <datalist id="countryList"></datalist>
+      <button class="btn" id="showBtn" data-i18n="show"></button>
+      <button class="btn ghost" id="randomBtn" data-i18n="random"></button>
+    </div>
+    <div id="searchErr"></div>
+  </section>
+
+  <section class="panel hidden" id="quizPanel">
+    <div class="scoreRow">
+      <span class="pill">⭐ <span data-i18n="score"></span>: <b id="qScore">0</b></span>
+      <span class="pill">🔥 <span data-i18n="streak"></span>: <b id="qStreak">0</b></span>
+      <span class="pill">🏆 <span data-i18n="best"></span>: <b id="qBest">0</b></span>
+    </div>
+    <p id="quizQ"></p>
+    <div id="quizOpts"></div>
+    <div id="quizFb"></div>
+    <button class="btn hidden" id="quizNext" data-i18n="next"></button>
+  </section>
+
+  <section class="stage" id="stage">
+    <img id="lmImg" alt="">
+    <div class="noimg hidden" id="noImg">🏞️</div>
+    <div class="shade"></div>
+    <canvas id="flagCanvas"></canvas>
+    <div class="pole"><div class="ball"></div></div>
+    <div class="spin hidden" id="imgSpin"></div>
+    <div class="anthemChip">
+      <button id="anthemBtn" title="play">▶</button>
+      <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i></div>
+      <span id="anthemName" dir="auto">…</span>
+    </div>
+    <div class="caption">📍 <span id="lmName" dir="auto">…</span><a id="wikiLink" href="#" target="_blank" rel="noopener">Wikipedia</a></div>
+  </section>
+
+  <div class="anthemBar">
+    <audio id="anthemAudio" controls preload="auto"></audio>
+  </div>
+
+  <section class="info" id="infoCard">
+    <div class="card"><div class="k" data-i18n="country"></div><div class="v" id="cName">…</div></div>
+    <div class="card"><div class="k" data-i18n="capital"></div><div class="v" id="cCap">…</div></div>
+    <div class="card"><div class="k" data-i18n="landmark"></div><div class="v" id="cLm">…</div></div>
+    <div class="card fact"><div class="k" data-i18n="fact"></div><div class="v" id="cFact">…</div></div>
+  </section>
+
+  <div class="windRow">
+    <span>🌬️ <span data-i18n="wind"></span></span>
+    <input type="range" id="windRange" min="0" max="2" step="0.1" value="1">
+    <span>🫧 <span data-i18n="alpha"></span></span>
+    <input type="range" id="alphaRange" min="40" max="100" step="1" value="85">
+  </div>
+
+  <footer>
+    <span data-i18n="credit"></span><br>
+    <span data-i18n="tip"></span>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================= بيانات الدول =================
+   iso|عربي|English|عاصمة|Capital|معلم|Landmark|عنوان ويكيبيديا الإنجليزية|معلومة|Fact */
+var RAW = [
+"eg|مصر|Egypt|القاهرة|Cairo|أهرامات الجيزة|Pyramids of Giza|Giza_pyramid_complex|الهرم الأكبر في الجيزة كان أطول مبنى في العالم لنحو 3800 عام.|The Great Pyramid of Giza was the world's tallest structure for about 3,800 years.",
+"sa|السعودية|Saudi Arabia|الرياض|Riyadh|المسجد الحرام|Masjid al-Haram|Masjid_al-Haram|السعودية أكبر دولة في شبه الجزيرة العربية.|Saudi Arabia is the largest country on the Arabian Peninsula.",
+"ae|الإمارات|United Arab Emirates|أبوظبي|Abu Dhabi|برج خليفة|Burj Khalifa|Burj_Khalifa|يبلغ ارتفاع برج خليفة 828 مترًا وهو أطول مبنى في العالم.|At 828 m, Burj Khalifa is the tallest building in the world.",
+"qa|قطر|Qatar|الدوحة|Doha|متحف الفن الإسلامي|Museum of Islamic Art|Museum_of_Islamic_Art,_Doha|استضافت قطر كأس العالم لكرة القدم عام 2022.|Qatar hosted the FIFA World Cup in 2022.",
+"kw|الكويت|Kuwait|مدينة الكويت|Kuwait City|أبراج الكويت|Kuwait Towers|Kuwait_Towers|أبراج الكويت من أشهر رموز العاصمة وتطل على ساحل الخليج.|Kuwait Towers are the best-known landmark of the capital, on the Gulf coast.",
+"bh|البحرين|Bahrain|المنامة|Manama|قلعة البحرين|Qal'at al-Bahrain|Qal'at_al-Bahrain|قلعة البحرين موقع مدرج في قائمة التراث العالمي لليونسكو.|Qal'at al-Bahrain is a UNESCO World Heritage Site.",
+"om|عُمان|Oman|مسقط|Muscat|جامع السلطان قابوس الأكبر|Sultan Qaboos Grand Mosque|Sultan_Qaboos_Grand_Mosque|يضم الجامع سجادة منسوجة يدويًا من الأكبر في العالم.|The mosque houses one of the world's largest hand-woven carpets.",
+"ye|اليمن|Yemen|صنعاء|Sanaa|صنعاء القديمة|Old City of Sana'a|Old_City_of_Sana'a|صنعاء القديمة مدرجة في التراث العالمي وتشتهر بمبانيها الطينية متعددة الطوابق.|The Old City of Sana'a is a UNESCO site known for its multi-storey tower houses.",
+"iq|العراق|Iraq|بغداد|Baghdad|ملوية سامراء|Great Mosque of Samarra|Great_Mosque_of_Samarra|ملوية سامراء مئذنة حلزونية يزيد ارتفاعها على 50 مترًا.|The spiral minaret of Samarra is more than 50 m high.",
+"sy|سوريا|Syria|دمشق|Damascus|الجامع الأموي|Umayyad Mosque|Umayyad_Mosque|دمشق من أقدم العواصم المأهولة باستمرار في العالم.|Damascus is among the oldest continuously inhabited cities in the world.",
+"lb|لبنان|Lebanon|بيروت|Beirut|بعلبك|Baalbek|Baalbek|تضم بعلبك معابد رومانية ضخمة منها معبد جوبيتر.|Baalbek has huge Roman temples, including the Temple of Jupiter.",
+"jo|الأردن|Jordan|عمّان|Amman|البتراء|Petra|Petra|البتراء مدينة منحوتة في الصخر الوردي وإحدى عجائب الدنيا السبع الجديدة.|Petra is carved into rose-red rock and is one of the New Seven Wonders.",
+"ps|فلسطين|Palestine|القدس|Jerusalem|قبة الصخرة|Dome of the Rock|Dome_of_the_Rock|قبة الصخرة في القدس من أبرز المعالم الإسلامية بقبتها الذهبية.|The Dome of the Rock in Jerusalem is famed for its golden dome.",
+"ly|ليبيا|Libya|طرابلس|Tripoli|لبدة الكبرى|Leptis Magna|Leptis_Magna|لبدة الكبرى من أفضل المدن الرومانية حفظًا على البحر المتوسط.|Leptis Magna is among the best-preserved Roman cities on the Mediterranean.",
+"tn|تونس|Tunisia|تونس|Tunis|آثار قرطاج|Carthage|Carthage|كانت قرطاج عاصمة إمبراطورية قوية نافست روما.|Carthage was the capital of a powerful empire that rivaled Rome.",
+"dz|الجزائر|Algeria|الجزائر|Algiers|جامع الجزائر|Great Mosque of Algiers|Djamaa_el_Djazaïr|لجامع الجزائر أطول مئذنة في العالم بنحو 265 مترًا.|The Great Mosque of Algiers has the world's tallest minaret at about 265 m.",
+"ma|المغرب|Morocco|الرباط|Rabat|مسجد الحسن الثاني|Hassan II Mosque|Hassan_II_Mosque|يطل المسجد في الدار البيضاء على المحيط الأطلسي ومئذنته من الأطول في العالم.|The mosque in Casablanca sits on the Atlantic coast and has one of the world's tallest minarets.",
+"mr|موريتانيا|Mauritania|نواكشوط|Nouakchott|شنقيط|Chinguetti|Chinguetti|شنقيط مدينة قوافل قديمة تشتهر بمكتبات المخطوطات.|Chinguetti is an old caravan city known for its manuscript libraries.",
+"sd|السودان|Sudan|الخرطوم|Khartoum|أهرامات مروي|Nubian Pyramids|Nubian_pyramids|في السودان أهرامات أكثر من التي في مصر.|Sudan has more pyramids than Egypt.",
+"so|الصومال|Somalia|مقديشو|Mogadishu|كهوف لاس جعل|Laas Geel|Laas_Geel|كهوف لاس جعل تضم رسومًا صخرية عمرها آلاف السنين.|The Laas Geel caves hold rock paintings thousands of years old.",
+"dj|جيبوتي|Djibouti|جيبوتي|Djibouti|بحيرة عسل|Lake Assal|Lake_Assal_(Djibouti)|بحيرة عسل من أكثر بحيرات العالم ملوحة وأخفض نقطة في أفريقيا.|Lake Assal is one of the saltiest lakes on Earth and Africa's lowest point.",
+"km|جزر القمر|Comoros|موروني|Moroni|بركان كارثالا|Mount Karthala|Mount_Karthala|جزر القمر أرخبيل بركاني في المحيط الهندي.|The Comoros is a volcanic archipelago in the Indian Ocean.",
+"tr|تركيا|Türkiye|أنقرة|Ankara|آيا صوفيا|Hagia Sophia|Hagia_Sophia|بُنيت آيا صوفيا في إسطنبول في القرن السادس الميلادي.|Hagia Sophia was built in Istanbul in the 6th century.",
+"ir|إيران|Iran|طهران|Tehran|برج آزادي|Azadi Tower|Azadi_Tower|برج آزادي هو رمز العاصمة طهران.|Azadi Tower is the symbol of Tehran.",
+"af|أفغانستان|Afghanistan|كابل|Kabul|تمثالا بوذا في باميان|Buddhas of Bamiyan|Buddhas_of_Bamiyan|نُحت تمثالا باميان في الجرف الصخري في القرن السادس.|The Bamiyan Buddhas were carved into a cliff in the 6th century.",
+"pk|باكستان|Pakistan|إسلام آباد|Islamabad|مسجد بادشاهي|Badshahi Mosque|Badshahi_Mosque|بُني المسجد في لاهور في القرن السابع عشر ويتسع لعشرات الآلاف.|Built in Lahore in the 17th century, it can hold tens of thousands of worshippers.",
+"in|الهند|India|نيودلهي|New Delhi|تاج محل|Taj Mahal|Taj_Mahal|بنى الإمبراطور شاه جهان تاج محل تخليدًا لزوجته ممتاز محل.|Emperor Shah Jahan built the Taj Mahal in memory of his wife Mumtaz Mahal.",
+"bd|بنغلاديش|Bangladesh|دكا|Dhaka|غابات سندربان|Sundarbans|Sundarbans|سندربان أكبر غابة مانغروف في العالم وموطن النمر البنغالي.|The Sundarbans is the world's largest mangrove forest and home to the Bengal tiger.",
+"lk|سريلانكا|Sri Lanka|كولومبو|Colombo|صخرة سيجيريا|Sigiriya|Sigiriya|سيجيريا قلعة صخرية شاهقة عمرها أكثر من 1500 سنة.|Sigiriya is a rock fortress over 1,500 years old.",
+"np|نيبال|Nepal|كاتماندو|Kathmandu|جبل إيفرست|Mount Everest|Mount_Everest|إيفرست أعلى قمة في العالم بارتفاع نحو 8849 مترًا.|Everest is the world's highest peak at about 8,849 m.",
+"cn|الصين|China|بكين|Beijing|سور الصين العظيم|Great Wall of China|Great_Wall_of_China|يمتد سور الصين العظيم آلاف الكيلومترات.|The Great Wall stretches for thousands of kilometres.",
+"jp|اليابان|Japan|طوكيو|Tokyo|جبل فوجي|Mount Fuji|Mount_Fuji|فوجي بركان وأعلى قمة في اليابان بارتفاع 3776 مترًا.|Fuji is a volcano and Japan's highest peak at 3,776 m.",
+"kr|كوريا الجنوبية|South Korea|سيول|Seoul|قصر غيونغبوك|Gyeongbokgung|Gyeongbokgung|أكبر القصور الملكية الخمسة في سيول وقد بُني عام 1395.|The largest of Seoul's five royal palaces, built in 1395.",
+"kp|كوريا الشمالية|North Korea|بيونغ يانغ|Pyongyang|برج جوتشي|Juche Tower|Juche_Tower|يبلغ ارتفاع برج جوتشي 170 مترًا.|Juche Tower is 170 m tall.",
+"mn|منغوليا|Mongolia|أولان باتور|Ulaanbaatar|صحراء غوبي|Gobi Desert|Gobi_Desert|غوبي صحراء واسعة في جنوب منغوليا وشمال الصين.|The Gobi is a vast desert spanning southern Mongolia and northern China.",
+"th|تايلاند|Thailand|بانكوك|Bangkok|القصر الكبير|Grand Palace|Grand_Palace|كان القصر الكبير في بانكوك مقر الملوك منذ عام 1782.|The Grand Palace in Bangkok was the royal residence from 1782.",
+"vn|فيتنام|Vietnam|هانوي|Hanoi|خليج ها لونغ|Ha Long Bay|Hạ_Long_Bay|يضم خليج ها لونغ آلاف الجزر الكلسية.|Ha Long Bay has thousands of limestone islands.",
+"kh|كمبوديا|Cambodia|بنوم بنه|Phnom Penh|أنغكور وات|Angkor Wat|Angkor_Wat|أنغكور وات أكبر نصب ديني في العالم ويظهر على علم كمبوديا.|Angkor Wat is the largest religious monument in the world and appears on Cambodia's flag.",
+"my|ماليزيا|Malaysia|كوالالمبور|Kuala Lumpur|برجا بتروناس|Petronas Towers|Petronas_Towers|كان برجا بتروناس أطول مبنيين في العالم بين 1998 و2004.|The Petronas Towers were the world's tallest buildings from 1998 to 2004.",
+"sg|سنغافورة|Singapore|سنغافورة|Singapore|ماريناباي ساندز|Marina Bay Sands|Marina_Bay_Sands|سنغافورة دولة مدينة على جزيرة، وفي فندق ماريناباي مسبح فوق الأبراج الثلاثة.|Singapore is an island city-state, and Marina Bay Sands has a pool atop its three towers.",
+"id|إندونيسيا|Indonesia|جاكرتا|Jakarta|معبد بوروبودور|Borobudur|Borobudur|بوروبودور أكبر معبد بوذي في العالم وقد بُني في القرن التاسع.|Borobudur is the world's largest Buddhist temple, built in the 9th century.",
+"ph|الفلبين|Philippines|مانيلا|Manila|تلال الشوكولاتة|Chocolate Hills|Chocolate_Hills|تتحول هذه التلال إلى اللون البني في موسم الجفاف.|These hills turn brown in the dry season.",
+"kz|كازاخستان|Kazakhstan|أستانا|Astana|برج بايتيريك|Bayterek Tower|Bayterek_Tower|برج بايتيريك رمز أستانا وارتفاعه 105 أمتار.|Bayterek Tower, the symbol of Astana, is 105 m tall.",
+"uz|أوزبكستان|Uzbekistan|طشقند|Tashkent|ميدان الريجستان|Registan|Registan|تحيط بميدان الريجستان في سمرقند ثلاث مدارس تاريخية.|The Registan in Samarkand is framed by three historic madrasas.",
+"az|أذربيجان|Azerbaijan|باكو|Baku|أبراج اللهب|Flame Towers|Flame_Towers|تتلألأ أبراج اللهب في باكو ليلًا بشاشات LED.|The Flame Towers in Baku glow at night with LED screens.",
+"ge|جورجيا|Georgia|تبليسي|Tbilisi|كنيسة غيرغيتي|Gergeti Trinity Church|Gergeti_Trinity_Church|تقع الكنيسة على ارتفاع نحو 2170 مترًا قرب جبل قازبيك.|The church stands at about 2,170 m near Mount Kazbek.",
+"am|أرمينيا|Armenia|يريفان|Yerevan|معبد غارني|Garni Temple|Garni_Temple|معبد غارني بطراز يوناني روماني من القرن الأول.|Garni is a Greco-Roman style temple from the 1st century.",
+"fr|فرنسا|France|باريس|Paris|برج إيفل|Eiffel Tower|Eiffel_Tower|افتُتح برج إيفل عام 1889 وارتفاعه نحو 330 مترًا.|The Eiffel Tower opened in 1889 and is about 330 m tall.",
+"gb|بريطانيا|United Kingdom|لندن|London|بيغ بن|Big Ben|Big_Ben|بيغ بن هو في الأصل اسم الجرس الكبير داخل برج إليزابيث.|Big Ben is actually the name of the great bell inside the Elizabeth Tower.",
+"ie|أيرلندا|Ireland|دبلن|Dublin|جروف موهير|Cliffs of Moher|Cliffs_of_Moher|ترتفع جروف موهير حتى نحو 214 مترًا فوق المحيط الأطلسي.|The Cliffs of Moher rise to about 214 m above the Atlantic.",
+"es|إسبانيا|Spain|مدريد|Madrid|ساغرادا فاميليا|Sagrada Família|Sagrada_Família|ما زالت كنيسة غاودي قيد البناء منذ عام 1882.|Gaudí's basilica has been under construction since 1882.",
+"pt|البرتغال|Portugal|لشبونة|Lisbon|برج بيليم|Belém Tower|Belém_Tower|برج بيليم حصن من القرن السادس عشر على نهر التاجة.|Belém Tower is a 16th-century fortress on the Tagus river.",
+"it|إيطاليا|Italy|روما|Rome|الكولوسيوم|Colosseum|Colosseum|كان الكولوسيوم يتسع لنحو 50 ألف متفرج.|The Colosseum could hold around 50,000 spectators.",
+"de|ألمانيا|Germany|برلين|Berlin|بوابة براندنبورغ|Brandenburg Gate|Brandenburg_Gate|بوابة براندنبورغ رمز لتوحيد ألمانيا.|The Brandenburg Gate is a symbol of German reunification.",
+"nl|هولندا|Netherlands|أمستردام|Amsterdam|طواحين كيندردايك|Kinderdijk|Kinderdijk|تعود طواحين الهواء في كيندردايك إلى القرن الثامن عشر.|The Kinderdijk windmills date from the 18th century.",
+"be|بلجيكا|Belgium|بروكسل|Brussels|ساحة غراند بلاس|Grand-Place|Grand-Place|ساحة غراند بلاس في بروكسل مدرجة في التراث العالمي.|Brussels' Grand-Place is a UNESCO World Heritage Site.",
+"ch|سويسرا|Switzerland|برن|Bern|جبل ماترهورن|Matterhorn|Matterhorn|ماترهورن قمة هرمية الشكل ارتفاعها 4478 مترًا.|The Matterhorn is a pyramid-shaped peak 4,478 m high.",
+"at|النمسا|Austria|فيينا|Vienna|قصر شونبرون|Schönbrunn Palace|Schönbrunn_Palace|كان شونبرون المقر الصيفي لعائلة هابسبورغ.|Schönbrunn was the summer residence of the Habsburgs.",
+"se|السويد|Sweden|ستوكهولم|Stockholm|قصر ستوكهولم|Stockholm Palace|Stockholm_Palace|قصر ستوكهولم هو المقر الرسمي للملك.|Stockholm Palace is the official residence of the Swedish monarch.",
+"no|النرويج|Norway|أوسلو|Oslo|مضيق غيرانغر|Geirangerfjord|Geirangerfjord|مضيق غيرانغر من أجمل المضائق ومدرج في التراث العالمي.|Geirangerfjord is one of the most beautiful fjords and a UNESCO site.",
+"dk|الدنمارك|Denmark|كوبنهاغن|Copenhagen|حديقة تيفولي|Tivoli Gardens|Tivoli_Gardens|افتُتحت حديقة تيفولي في كوبنهاغن عام 1843.|Tivoli Gardens opened in Copenhagen in 1843.",
+"fi|فنلندا|Finland|هلسنكي|Helsinki|كاتدرائية هلسنكي|Helsinki Cathedral|Helsinki_Cathedral|كاتدرائية بيضاء بقباب خضراء من القرن التاسع عشر.|A white 19th-century cathedral with green domes.",
+"is|آيسلندا|Iceland|ريكيافيك|Reykjavik|شلال غولفوس|Gullfoss|Gullfoss|يسقط غولفوس على درجتين في نهر هفيتا.|Gullfoss drops in two tiers on the Hvítá river.",
+"pl|بولندا|Poland|وارسو|Warsaw|قلعة فافل|Wawel Castle|Wawel_Castle|كانت قلعة فافل في كراكوف مقرًا لملوك بولندا.|Wawel Castle in Kraków was a seat of Polish kings.",
+"cz|التشيك|Czechia|براغ|Prague|قلعة براغ|Prague Castle|Prague_Castle|قلعة براغ من أكبر مجمعات القلاع في العالم.|Prague Castle is among the largest castle complexes in the world.",
+"hu|المجر|Hungary|بودابست|Budapest|مبنى البرلمان|Hungarian Parliament Building|Hungarian_Parliament_Building|يقف البرلمان على ضفة الدانوب بطراز قوطي جديد.|The Parliament stands on the Danube bank in Gothic Revival style.",
+"ro|رومانيا|Romania|بوخارست|Bucharest|قلعة بران|Bran Castle|Bran_Castle|ترتبط قلعة بران بأسطورة دراكولا.|Bran Castle is linked with the Dracula legend.",
+"bg|بلغاريا|Bulgaria|صوفيا|Sofia|دير ريلا|Rila Monastery|Rila_Monastery|دير ريلا أكبر دير أرثوذكسي في بلغاريا.|The Rila Monastery is the largest Orthodox monastery in Bulgaria.",
+"gr|اليونان|Greece|أثينا|Athens|الأكروبول|Acropolis of Athens|Acropolis_of_Athens|يعلو الأكروبول معبد البارثينون.|The Acropolis is crowned by the Parthenon.",
+"hr|كرواتيا|Croatia|زغرب|Zagreb|دوبروفنيك|Dubrovnik|Dubrovnik|تُلقب دوبروفنيك بلؤلؤة الأدرياتيك.|Dubrovnik is nicknamed the Pearl of the Adriatic.",
+"si|سلوفينيا|Slovenia|ليوبليانا|Ljubljana|بحيرة بليد|Lake Bled|Lake_Bled|في بحيرة بليد جزيرة صغيرة عليها كنيسة.|Lake Bled has a small island with a church.",
+"rs|صربيا|Serbia|بلغراد|Belgrade|قلعة بلغراد|Belgrade Fortress|Belgrade_Fortress|تقع قلعة بلغراد عند ملتقى نهري سافا والدانوب.|Belgrade Fortress stands where the Sava meets the Danube.",
+"ba|البوسنة والهرسك|Bosnia and Herzegovina|سراييفو|Sarajevo|الجسر القديم في موستار|Stari Most|Stari_Most|بُني الجسر القديم في موستار في القرن السادس عشر.|The Old Bridge in Mostar was built in the 16th century.",
+"al|ألبانيا|Albania|تيرانا|Tirana|مدينة بيرات|Berat|Berat|تُلقب بيرات بمدينة الألف نافذة.|Berat is nicknamed the City of a Thousand Windows.",
+"ua|أوكرانيا|Ukraine|كييف|Kyiv|كاتدرائية القديسة صوفيا|Saint Sophia Cathedral|Saint_Sophia_Cathedral,_Kyiv|تعود كاتدرائية القديسة صوفيا في كييف إلى القرن الحادي عشر.|Kyiv's St Sophia Cathedral dates from the 11th century.",
+"ru|روسيا|Russia|موسكو|Moscow|كاتدرائية القديس باسيل|Saint Basil's Cathedral|Saint_Basil's_Cathedral|تشتهر بقبابها الملونة في الساحة الحمراء.|It is famous for its colourful domes on Red Square.",
+"by|بيلاروس|Belarus|مينسك|Minsk|قلعة مير|Mir Castle|Mir_Castle_Complex|قلعة مير من القرن السادس عشر ومدرجة في التراث العالمي.|Mir Castle is a 16th-century UNESCO site.",
+"mt|مالطا|Malta|فاليتا|Valletta|فاليتا|Valletta|Valletta|فاليتا من أصغر عواصم الاتحاد الأوروبي.|Valletta is one of the smallest capitals in the EU.",
+"cy|قبرص|Cyprus|نيقوسيا|Nicosia|بافوس|Paphos|Paphos|بافوس مدرجة في التراث العالمي وتشتهر بفسيفسائها الرومانية.|Paphos is a UNESCO site famed for its Roman mosaics.",
+"us|الولايات المتحدة|United States|واشنطن|Washington, D.C.|تمثال الحرية|Statue of Liberty|Statue_of_Liberty|قدمتها فرنسا هدية إلى أمريكا عام 1886.|It was a gift from France, dedicated in 1886.",
+"ca|كندا|Canada|أوتاوا|Ottawa|شلالات نياغارا|Niagara Falls|Niagara_Falls|تقع شلالات نياغارا على الحدود بين كندا وأمريكا.|Niagara Falls lies on the Canada–US border.",
+"mx|المكسيك|Mexico|مكسيكو سيتي|Mexico City|تشيتشن إيتزا|Chichen Itza|Chichen_Itza|مدينة مايا قديمة وإحدى عجائب الدنيا السبع الجديدة.|An ancient Maya city and one of the New Seven Wonders.",
+"cu|كوبا|Cuba|هافانا|Havana|هافانا القديمة|Old Havana|Old_Havana|تشتهر هافانا بسياراتها الكلاسيكية الملونة.|Havana is famed for its colourful classic cars.",
+"jm|جامايكا|Jamaica|كينغستون|Kingston|جبال بلو ماونتن|Blue Mountains|Blue_Mountains_(Jamaica)|تنتج جبال بلو ماونتن بنًّا مشهورًا عالميًا.|The Blue Mountains grow world-famous coffee.",
+"cr|كوستاريكا|Costa Rica|سان خوسيه|San José|بركان أرينال|Arenal Volcano|Arenal_Volcano|أرينال من أشهر براكين كوستاريكا.|Arenal is one of Costa Rica's best-known volcanoes.",
+"pa|بنما|Panama|مدينة بنما|Panama City|قناة بنما|Panama Canal|Panama_Canal|تربط قناة بنما المحيط الأطلسي بالهادئ.|The Panama Canal links the Atlantic and the Pacific.",
+"br|البرازيل|Brazil|برازيليا|Brasília|تمثال المسيح الفادي|Christ the Redeemer|Christ_the_Redeemer_(statue)|يبلغ ارتفاع التمثال في ريو دي جانيرو نحو 30 مترًا.|The statue in Rio de Janeiro is about 30 m tall.",
+"ar|الأرجنتين|Argentina|بوينس آيرس|Buenos Aires|شلالات إيغوازو|Iguazu Falls|Iguazu_Falls|إيغوازو مجموعة من مئات الشلالات على الحدود مع البرازيل.|Iguazu is a system of hundreds of waterfalls on the Brazil border.",
+"cl|تشيلي|Chile|سانتياغو|Santiago|تماثيل موآي|Moai|Moai|تماثيل موآي الحجرية الضخمة موجودة في جزيرة الفصح.|The giant stone moai statues stand on Easter Island.",
+"pe|بيرو|Peru|ليما|Lima|ماتشو بيتشو|Machu Picchu|Machu_Picchu|مدينة الإنكا الضائعة في جبال الأنديز.|The Inca citadel high in the Andes.",
+"co|كولومبيا|Colombia|بوغوتا|Bogotá|قرطاجنة|Cartagena|Cartagena,_Colombia|مدينة استعمارية مسوّرة على ساحل الكاريبي.|A walled colonial city on the Caribbean coast.",
+"ve|فنزويلا|Venezuela|كاراكاس|Caracas|شلال أنخل|Angel Falls|Angel_Falls|أعلى شلال في العالم بارتفاع نحو 979 مترًا.|The world's tallest waterfall at about 979 m.",
+"ec|الإكوادور|Ecuador|كيتو|Quito|جزر غالاباغوس|Galápagos Islands|Galápagos_Islands|ألهمت جزر غالاباغوس أبحاث تشارلز داروين.|The Galápagos Islands inspired Charles Darwin's research.",
+"bo|بوليفيا|Bolivia|سوكري|Sucre|سالار دي أويوني|Salar de Uyuni|Salar_de_Uyuni|أويوني أكبر سبخة ملحية في العالم.|Uyuni is the world's largest salt flat.",
+"uy|الأوروغواي|Uruguay|مونتيفيديو|Montevideo|كولونيا ديل ساكرامنتو|Colonia del Sacramento|Colonia_del_Sacramento|بلدة تاريخية على نهر ريو دي لا بلاتا.|A historic town on the Río de la Plata.",
+"za|جنوب أفريقيا|South Africa|بريتوريا|Pretoria|جبل تيبل|Table Mountain|Table_Mountain|يطل جبل الطاولة على مدينة كيب تاون.|Table Mountain overlooks Cape Town.",
+"ng|نيجيريا|Nigeria|أبوجا|Abuja|صخرة أوليمبو|Olumo Rock|Olumo_Rock|نيجيريا أكثر دول أفريقيا سكانًا.|Nigeria is Africa's most populous country.",
+"et|إثيوبيا|Ethiopia|أديس أبابا|Addis Ababa|كنائس لاليبيلا|Lalibela|Lalibela|كنائس لاليبيلا منحوتة في الصخر.|The churches of Lalibela are carved from solid rock.",
+"ke|كينيا|Kenya|نيروبي|Nairobi|ماساي مارا|Maasai Mara|Maasai_Mara|تشتهر ماساي مارا بهجرة الحيوانات السنوية الكبرى.|Maasai Mara is famous for the Great Migration.",
+"tz|تنزانيا|Tanzania|دودوما|Dodoma|جبل كليمنجارو|Mount Kilimanjaro|Mount_Kilimanjaro|كليمنجارو أعلى قمة في أفريقيا بارتفاع 5895 مترًا.|Kilimanjaro is Africa's highest peak at 5,895 m.",
+"ug|أوغندا|Uganda|كمبالا|Kampala|غابة بويندي|Bwindi Impenetrable Forest|Bwindi_Impenetrable_National_Park|تؤوي بويندي نحو نصف غوريلا الجبال في العالم.|Bwindi shelters about half of the world's mountain gorillas.",
+"gh|غانا|Ghana|أكرا|Accra|قلعة كيب كوست|Cape Coast Castle|Cape_Coast_Castle|ارتبطت القلعة بتجارة الرقيق عبر الأطلسي.|The castle is tied to the transatlantic slave trade.",
+"sn|السنغال|Senegal|داكار|Dakar|نصب النهضة الأفريقية|African Renaissance Monument|African_Renaissance_Monument|هذا النصب أطول تمثال في أفريقيا.|It is the tallest statue in Africa.",
+"ml|مالي|Mali|باماكو|Bamako|جامع جينيه الكبير|Great Mosque of Djenné|Great_Mosque_of_Djenné|أكبر مبنى من الطين في العالم.|The largest mud-brick building in the world.",
+"ci|ساحل العاج|Ivory Coast|ياموسوكرو|Yamoussoukro|بازيليك سيدة السلام|Basilica of Our Lady of Peace|Basilica_of_Our_Lady_of_Peace_of_Yamoussoukro|من أكبر الكنائس في العالم.|One of the largest churches in the world.",
+"cm|الكاميرون|Cameroon|ياوندي|Yaoundé|جبل الكاميرون|Mount Cameroon|Mount_Cameroon|جبل الكاميرون بركان نشط ارتفاعه نحو 4040 مترًا.|Mount Cameroon is an active volcano about 4,040 m high.",
+"cd|الكونغو الديمقراطية|DR Congo|كينشاسا|Kinshasa|حديقة فيرونغا|Virunga National Park|Virunga_National_Park|فيرونغا من أقدم المحميات الوطنية في أفريقيا.|Virunga is one of Africa's oldest national parks.",
+"ao|أنغولا|Angola|لواندا|Luanda|حصن ساو ميغيل|Fortress of São Miguel|Fortress_of_São_Miguel|يعود حصن ساو ميغيل في لواندا إلى القرن السادس عشر.|The São Miguel fortress in Luanda dates from the 16th century.",
+"zw|زيمبابوي|Zimbabwe|هراري|Harare|شلالات فيكتوريا|Victoria Falls|Victoria_Falls|من أكبر شلالات العالم على نهر زامبيزي.|One of the world's largest waterfalls, on the Zambezi.",
+"mg|مدغشقر|Madagascar|أنتاناناريفو|Antananarivo|شارع الباوباب|Avenue of the Baobabs|Avenue_of_the_Baobabs|أشجار باوباب عملاقة عمرها مئات السنين.|Giant baobab trees hundreds of years old.",
+"mu|موريشيوس|Mauritius|بورت لويس|Port Louis|جبل لو مورن|Le Morne Brabant|Le_Morne_Brabant|جبل لو مورن مدرج في التراث العالمي.|Le Morne Brabant is a UNESCO World Heritage Site.",
+"na|ناميبيا|Namibia|ويندهوك|Windhoek|كثبان سوسوسفلاي|Sossusvlei|Sossusvlei|كثبانها الحمراء من الأعلى في العالم.|Its red dunes are among the tallest in the world.",
+"rw|رواندا|Rwanda|كيغالي|Kigali|حديقة البراكين|Volcanoes National Park|Volcanoes_National_Park|الحديقة موطن لغوريلا الجبال.|The park is home to mountain gorillas.",
+"au|أستراليا|Australia|كانبيرا|Canberra|دار أوبرا سيدني|Sydney Opera House|Sydney_Opera_House|افتُتحت الدار عام 1973 بسقف يشبه الأشرعة.|The Opera House opened in 1973 with sail-like roofs.",
+"nz|نيوزيلندا|New Zealand|ويلينغتون|Wellington|ميلفورد ساوند|Milford Sound|Milford_Sound|ميلفورد ساوند مضيق بحري في الجزيرة الجنوبية.|Milford Sound is a fjord on the South Island.",
+"fj|فيجي|Fiji|سوفا|Suva|جزر ماماناوكا|Mamanuca Islands|Mamanuca_Islands|أرخبيل من الجزر الاستوائية والشواطئ الرملية.|A chain of tropical islands with sandy beaches."
+];
+var COUNTRIES = RAW.map(function(s){
+  var p=s.split("|");
+  return {iso:p[0],ar:p[1],en:p[2],cap_ar:p[3],cap_en:p[4],lm_ar:p[5],lm_en:p[6],wiki:p[7],fact_ar:p[8],fact_en:p[9]};
+});
+var ALIAS = {"امريكا":"us","أمريكا":"us","usa":"us","america":"us","uk":"gb","england":"gb","britain":"gb","انجلترا":"gb","إنجلترا":"gb",
+  "turkey":"tr","czech republic":"cz","holland":"nl","ksa":"sa","uae":"ae","emirates":"ae","korea":"kr","كوريا":"kr","congo":"cd","ivory coast":"ci","cote d ivoire":"ci",
+  "الامارات":"ae","عمان":"om","سلطنة عمان":"om","بريطانيا العظمى":"gb","المملكة المتحدة":"gb","الدنمارك":"dk","هولندا":"nl"};
+
+/* ================= النصوص ================= */
+var STR = {
+  ar:{ title:"أعلام ترفرف", subtitle:"اكتب اسم الدولة فيرفرف علمها فوق أشهر معالمها مع عزف نشيدها الوطني",
+    explore:"استكشاف", quiz:"اختبار", searchPh:"اكتب اسم الدولة… مثال: مصر، اليابان، France",
+    show:"اعرض", random:"🎲 عشوائي", country:"الدولة", capital:"العاصمة", landmark:"أشهر معلم",
+    fact:"هل تعلم؟", wind:"شدة الرياح", alpha:"شفافية العلم", score:"النقاط", streak:"التتابع", best:"الأفضل",
+    next:"التالي ⏭", guessQ:"ما هذه الدولة؟ 🤔 خمّن من العلم والمعلم والنشيد!",
+    correct:"🎉 صحيح! أحسنت!", wrong:"❌ خطأ! الإجابة الصحيحة:", anthemOf:"النشيد الوطني",
+    notFound:"لم أجد هذه الدولة! جرّب: مصر، السعودية، اليابان، فرنسا…",
+    credit:"الأعلام: flagcdn.com • الأناشيد: jsDelivr / nationalanthems.info • الصور: ويكيبيديا",
+    tip:"اكتب بالعربية أو الإنجليزية — مثال: المغرب، تركيا، Japan، Brazil",
+    qMode:"وضع الاختبار: الاسم مخفي!", anthemQ:"نشيد دولة… أي دولة؟ 🎵",
+    onlineStatus:"متصل — تُحفظ الموارد التي تزورها لاستخدامها دون اتصال", offlineStatus:"دون اتصال — تظهر الموارد التي سبق تحميلها فقط" },
+  en:{ title:"Waving Flags", subtitle:"Type any country to see its flag waving over its top landmark while its anthem plays",
+    explore:"Explore", quiz:"Quiz", searchPh:"Type a country… e.g. Egypt, Japan, France",
+    show:"Show", random:"🎲 Random", country:"Country", capital:"Capital", landmark:"Top landmark",
+    fact:"Did you know?", wind:"Wind strength", alpha:"Flag transparency", score:"Score", streak:"Streak", best:"Best",
+    next:"Next ⏭", guessQ:"Which country is this? 🤔 Guess from the flag, landmark and anthem!",
+    correct:"🎉 Correct! Well done!", wrong:"❌ Wrong! The answer is:", anthemOf:"National anthem",
+    notFound:"Country not found! Try: Egypt, Japan, France, Brazil…",
+    credit:"Flags: flagcdn.com • Anthems: jsDelivr / nationalanthems.info • Photos: Wikipedia",
+    tip:"Type in Arabic or English — e.g. Morocco, Türkiye, Japan, Brazil",
+    qMode:"Quiz mode: name hidden!", anthemQ:"An anthem… of which country? 🎵",
+    onlineStatus:"Online — visited resources are saved for offline use", offlineStatus:"Offline — only previously loaded resources are available" }
+};
+var lang="ar";
+try{ lang=localStorage.getItem("wflag_lang")||"ar"; }catch(e){}
+if(lang!=="ar"&&lang!=="en") lang="ar";
+function t(k){ return (STR[lang]&&STR[lang][k])||STR.en[k]||k; }
+function updateNetworkStatus(){
+  var status=document.getElementById("netStatus");
+  if(!status) return;
+  var online=navigator.onLine;
+  status.textContent=t(online?"onlineStatus":"offlineStatus");
+  status.classList.toggle("offline",!online);
+}
+window.addEventListener("online",updateNetworkStatus);
+window.addEventListener("offline",updateNetworkStatus);
+
+var $=function(id){return document.getElementById(id);};
+var input=$("countryInput"), list=$("countryList"), err=$("searchErr"),
+    lmImg=$("lmImg"), noImg=$("noImg"), spin=$("imgSpin"), canvas=$("flagCanvas"), ctx=canvas.getContext("2d"),
+    audio=$("anthemAudio"), eq=$("eq"), anthemBtn=$("anthemBtn"), anthemName=$("anthemName"),
+    lmName=$("lmName"), wikiLink=$("wikiLink"),
+    cName=$("cName"), cCap=$("cCap"), cLm=$("cLm"), cFact=$("cFact"),
+    quizPanel=$("quizPanel"), explorePanel=$("explorePanel"),
+    tabExplore=$("tabExplore"), tabQuiz=$("tabQuiz"),
+    qScore=$("qScore"), qStreak=$("qStreak"), qBest=$("qBest"),
+    quizQ=$("quizQ"), quizOpts=$("quizOpts"), quizFb=$("quizFb"), quizNext=$("quizNext");
+var mode="explore", current=null, wind=1, flagAlpha=0.85,
+    q={score:0,streak:0,best:0,cur:null,opts:[],answered:false};
+try{ q.best=parseInt(localStorage.getItem("wflag_best")||"0",10)||0; }catch(e){}
+
+/* ================= البحث ================= */
+function norm(s){
+  return (s||"").toLowerCase()
+    .replace(/[\u064B-\u0652\u0640]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي")
+    .replace(/[^a-z0-9\u0600-\u06FF ]/g," ").replace(/\s+/g," ").trim();
+}
+function findCountry(text){
+  var n=norm(text); if(!n) return null;
+  var i,c;
+  for(var a in ALIAS){ if(norm(a)===n){ for(i=0;i<COUNTRIES.length;i++) if(COUNTRIES[i].iso===ALIAS[a]) return COUNTRIES[i]; } }
+  for(i=0;i<COUNTRIES.length;i++){ c=COUNTRIES[i];
+    if(norm(c.ar)===n||norm(c.en)===n||c.iso===n) return c; }
+  if(n.length<2) return null;
+  for(i=0;i<COUNTRIES.length;i++){ c=COUNTRIES[i];
+    if(norm(c.ar).indexOf(n)===0||norm(c.en).indexOf(n)===0) return c; }
+  for(i=0;i<COUNTRIES.length;i++){ c=COUNTRIES[i];
+    if(norm(c.ar).indexOf(n)>=0||norm(c.en).indexOf(n)>=0) return c; }
+  return null;
+}
+
+function applyLang(){
+  updateNetworkStatus();
+  document.documentElement.dir=(lang==="ar")?"rtl":"ltr";
+  document.documentElement.lang=lang;
+  var els=document.querySelectorAll("[data-i18n]");
+  for(var i=0;i<els.length;i++) els[i].textContent=t(els[i].getAttribute("data-i18n"));
+  var ph=document.querySelectorAll("[data-i18n-ph]");
+  for(var j=0;j<ph.length;j++) ph[j].placeholder=t(ph[j].getAttribute("data-i18n-ph"));
+  $("langBtn").textContent=(lang==="ar")?"English 🌐":"عربي 🌐";
+  list.innerHTML="";
+  COUNTRIES.forEach(function(c){
+    var o=document.createElement("option"); o.value=(lang==="ar")?c.ar:c.en; list.appendChild(o);
+  });
+  qBest.textContent=q.best; qScore.textContent=q.score; qStreak.textContent=q.streak;
+  if(current) renderInfo();
+  if(mode==="quiz"&&q.cur) renderQuizQ();
+}
+
+/* ================= العلم المتموج ================= */
+var flagImg=new Image(), flagReady=false;
+flagImg.onload=function(){flagReady=true;};
+flagImg.onerror=function(){flagReady=false;};
+function sizeCanvas(){
+  var r=canvas.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=Math.max(2,Math.round(r.width*dpr));
+  canvas.height=Math.max(2,Math.round(r.height*dpr));
+}
+window.addEventListener("resize",sizeCanvas);
+var waveT=0;
+function drawFlag(dt){
+  waveT+=dt;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(!flagReady||!flagImg.naturalWidth) return;
+  var W=canvas.width,H=canvas.height, rect=canvas.getBoundingClientRect();
+  var k=rect.width?W/rect.width:1;
+  var iw=flagImg.naturalWidth, ih=flagImg.naturalHeight;
+  var s=Math.min(W*0.55/iw,H*0.42/ih), fw=iw*s, fh=ih*s;
+  var px=(34+6)*k, y0=H*0.075;
+  var N=110, sw=iw/N, dw=fw/N;
+  ctx.save(); ctx.globalAlpha=flagAlpha;
+  for(var i=0;i<N;i++){
+    var p=i/(N-1);
+    var off=(Math.sin(i*0.30+waveT*4.2)*0.045+Math.sin(i*0.12-waveT*2.3)*0.03)*fh*wind*p;
+    var dx=px+dw*i, dy=y0+off;
+    ctx.drawImage(flagImg,i*sw,0,sw,ih,dx,dy,dw+1,fh);
+    var sh=(Math.sin(i*0.30+waveT*4.2+1.1)+1)/2;
+    ctx.fillStyle="rgba(0,0,30,"+(0.30*sh*wind+0.04).toFixed(3)+")";
+    ctx.fillRect(dx,dy,dw+1,fh);
+    ctx.fillStyle="rgba(255,255,255,"+(0.10*(1-sh)*wind).toFixed(3)+")";
+    ctx.fillRect(dx,dy,dw+1,fh);
+  }
+  ctx.restore();
+}
+var lastT=0;
+function loop(ts){
+  var dt=Math.min(0.05,(ts-lastT)/1000||0.016); lastT=ts;
+  drawFlag(dt); requestAnimationFrame(loop);
+}
+
+/* ================= النشيد ================= */
+var NO_JSD={ye:1,ps:1,tn:1,ir:1,vn:1,ng:1,et:1,fi:1}, actSrc=0, stallTimer=null;
+function anthemURL(c,which){
+  var jd="https://cdn.jsdelivr.net/gh/open-assets-hub/national-anthems@main/anthems/"+c.iso+"/anthem.mp3";
+  var na="https://nationalanthems.info/"+c.iso+".mp3";
+  var primaryIsJd=!NO_JSD[c.iso];
+  if(which===0) return primaryIsJd?jd:na;
+  return primaryIsJd?na:jd;
+}
+function tryPlay(){ try{var p=audio.play();if(p&&p.catch)p.catch(function(){});}catch(e){} }
+function useFallback(auto){
+  if(!current||actSrc!==0) return;
+  actSrc=1; audio.src=anthemURL(current,1); audio.load();
+  if(!auto) tryPlay();
+}
+function armStallWatch(){
+  if(stallTimer) clearTimeout(stallTimer);
+  stallTimer=setTimeout(function(){
+    if(current&&actSrc===0&&audio.networkState===2&&audio.readyState<2) useFallback(true);
+  },12000);
+}
+audio.addEventListener("error",function(){ useFallback(false); });
+audio.addEventListener("play",function(){eq.classList.add("play");anthemBtn.textContent="⏸";});
+audio.addEventListener("pause",function(){eq.classList.remove("play");anthemBtn.textContent="▶";});
+anthemBtn.onclick=function(){ if(audio.paused) tryPlay(); else audio.pause(); };
+
+/* ================= صورة المعلم (من ويكيبيديا) ================= */
+var imgToken=0, imgCache={};
+function showImg(url,fallbackUrl,token){
+  lmImg.onload=function(){ if(token!==imgToken) return; spin.classList.add("hidden"); noImg.classList.add("hidden"); lmImg.classList.add("show"); };
+  lmImg.onerror=function(){
+    if(token!==imgToken) return;
+    if(fallbackUrl&&lmImg.src!==fallbackUrl){ lmImg.src=fallbackUrl; return; }
+    spin.classList.add("hidden"); noImg.classList.remove("hidden");
+  };
+  lmImg.src=url;
+}
+function loadLandmark(c){
+  var token=++imgToken;
+  spin.classList.remove("hidden"); lmImg.classList.remove("show"); noImg.classList.add("hidden");
+  if(imgCache[c.wiki]){ showImg(imgCache[c.wiki][0],imgCache[c.wiki][1],token); return; }
+  var api="https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(c.wiki);
+  fetch(api).then(function(r){ if(!r.ok) throw new Error("http"); return r.json(); }).then(function(j){
+    var small=(j.thumbnail&&j.thumbnail.source)||(j.originalimage&&j.originalimage.source);
+    if(!small) throw new Error("noimg");
+    var big=small.replace(/\/\d+px-/,"/1280px-");
+    imgCache[c.wiki]=[big,small];
+    if(token===imgToken) showImg(big,small,token);
+  }).catch(function(){
+    if(token!==imgToken) return;
+    spin.classList.add("hidden"); noImg.classList.remove("hidden");
+  });
+}
+
+/* ================= عرض المشهد ================= */
+function loadScene(c){
+  current=c; actSrc=0;
+  loadLandmark(c);
+  flagReady=false;
+  flagImg.src="https://flagcdn.com/w640/"+c.iso+".png";
+  try{audio.pause();}catch(e){}
+  audio.src=anthemURL(c,0); audio.load(); armStallWatch();
+  renderInfo();
+}
+function renderInfo(){
+  if(!current) return;
+  var hide=(mode==="quiz"&&!q.answered);
+  if(hide){
+    cName.textContent="؟؟؟ ???"; cCap.textContent="؟؟؟ ???"; cLm.textContent="؟؟؟ ???";
+    cFact.textContent=t("qMode"); lmName.textContent="؟؟؟ ???";
+    anthemName.textContent="🎵 "+t("anthemQ"); lmImg.alt="???";
+    wikiLink.classList.add("hidden");
+  }else{
+    cName.textContent=current.ar+" • "+current.en;
+    cCap.textContent=current.cap_ar+" • "+current.cap_en;
+    cLm.textContent=current.lm_ar+" • "+current.lm_en;
+    cFact.textContent=(lang==="ar")?current.fact_ar:current.fact_en;
+    lmName.textContent=(lang==="ar")?current.lm_ar:current.lm_en;
+    anthemName.textContent="🎵 "+t("anthemOf")+": "+((lang==="ar")?current.ar:current.en);
+    lmImg.alt=current.en;
+    wikiLink.href="https://en.wikipedia.org/wiki/"+encodeURIComponent(current.wiki);
+    wikiLink.classList.remove("hidden");
+  }
+}
+function doShow(){
+  var c=findCountry(input.value);
+  if(!c){ err.textContent="❓ "+t("notFound"); input.focus(); return; }
+  err.textContent=""; loadScene(c); setTimeout(tryPlay,400);
+}
+function doRandom(){
+  var c=COUNTRIES[Math.floor(Math.random()*COUNTRIES.length)];
+  input.value=(lang==="ar")?c.ar:c.en; err.textContent="";
+  loadScene(c); setTimeout(tryPlay,400);
+}
+
+/* ================= الاختبار ================= */
+function setMode(m){
+  mode=m;
+  tabExplore.classList.toggle("on",m==="explore");
+  tabQuiz.classList.toggle("on",m==="quiz");
+  explorePanel.classList.toggle("hidden",m!=="explore");
+  quizPanel.classList.toggle("hidden",m!=="quiz");
+  if(m==="quiz"){ nextQuestion(); }
+  else { renderInfo(); }
+}
+function nextQuestion(){
+  var idx=Math.floor(Math.random()*COUNTRIES.length);
+  q.cur=COUNTRIES[idx]; q.answered=false;
+  var pool=COUNTRIES.slice(); pool.splice(idx,1);
+  var opts=[q.cur];
+  while(opts.length<4){ var k=Math.floor(Math.random()*pool.length); opts.push(pool.splice(k,1)[0]); }
+  for(var i=opts.length-1;i>0;i--){ var r=Math.floor(Math.random()*(i+1)); var tmp=opts[i]; opts[i]=opts[r]; opts[r]=tmp; }
+  q.opts=opts;
+  quizNext.classList.add("hidden"); quizFb.textContent="";
+  loadScene(q.cur); setTimeout(tryPlay,400);
+  renderQuizQ();
+}
+function renderQuizQ(){
+  quizQ.textContent=t("guessQ");
+  quizOpts.innerHTML="";
+  q.opts.forEach(function(c){
+    var b=document.createElement("button");
+    b.textContent=(lang==="ar")?c.ar:c.en;
+    var s=document.createElement("small"); s.textContent=(lang==="ar")?c.en:c.ar; b.appendChild(s);
+    b.onclick=function(){answer(c,b);};
+    if(q.answered){ b.disabled=true; if(c.iso===q.cur.iso) b.classList.add("right"); }
+    quizOpts.appendChild(b);
+  });
+}
+function answer(c,btn){
+  if(q.answered) return; q.answered=true;
+  var kids=quizOpts.children, ok=(c.iso===q.cur.iso), i;
+  for(i=0;i<kids.length;i++) kids[i].disabled=true;
+  quizFb.textContent="";
+  var l1=document.createElement("div"), l2=document.createElement("div");
+  if(ok){
+    btn.classList.add("right"); q.score++; q.streak++;
+    l1.textContent=t("correct");
+    l2.textContent="🌍 "+q.cur.ar+" • "+q.cur.en+" — "+((lang==="ar")?q.cur.fact_ar:q.cur.fact_en);
+  }else{
+    btn.classList.add("wrong"); q.streak=0;
+    for(i=0;i<kids.length;i++) if(q.opts[i].iso===q.cur.iso) kids[i].classList.add("right");
+    l1.textContent=t("wrong")+" "+q.cur.ar+" • "+q.cur.en;
+    l2.textContent="📍 "+((lang==="ar")?q.cur.lm_ar:q.cur.lm_en);
+  }
+  quizFb.appendChild(l1); quizFb.appendChild(l2);
+  if(q.score>q.best){ q.best=q.score; try{localStorage.setItem("wflag_best",String(q.best));}catch(e){} }
+  qScore.textContent=q.score; qStreak.textContent=q.streak; qBest.textContent=q.best;
+  quizNext.classList.remove("hidden"); renderInfo();
+}
+
+/* ================= الربط ================= */
+$("showBtn").onclick=doShow;
+$("randomBtn").onclick=doRandom;
+input.addEventListener("keydown",function(e){ if(e.key==="Enter") doShow(); });
+input.addEventListener("change",function(){ if(findCountry(input.value)) doShow(); });
+tabExplore.onclick=function(){setMode("explore");};
+tabQuiz.onclick=function(){setMode("quiz");};
+quizNext.onclick=nextQuestion;
+$("langBtn").onclick=function(){
+  lang=(lang==="ar")?"en":"ar";
+  try{localStorage.setItem("wflag_lang",lang);}catch(e){}
+  applyLang();
+  var c=current; if(c&&mode==="explore") input.value=(lang==="ar")?c.ar:c.en;
+};
+$("windRange").oninput=function(e){wind=parseFloat(e.target.value);};
+$("alphaRange").oninput=function(e){flagAlpha=parseFloat(e.target.value)/100;};
+
+applyLang(); sizeCanvas(); requestAnimationFrame(loop); setTimeout(sizeCanvas,300);
+var first=COUNTRIES[Math.floor(Math.random()*COUNTRIES.length)];
+input.value=(lang==="ar")?first.ar:first.en;
+loadScene(first);
+})();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",function(){
+    navigator.serviceWorker.register("./service-worker.js").catch(function(error){
+      console.warn("Offline support could not be enabled:",error);
+    });
+  });
+}
+</script>
+</body>
+</html>
